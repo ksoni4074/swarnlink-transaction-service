@@ -61,6 +61,10 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-openfeign</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>io.awspring.cloud</groupId>
 			<artifactId>spring-cloud-aws-autoconfigure</artifactId>
 		</dependency>
@@ -151,7 +155,8 @@
 					</annotationProcessorPaths>
 					<source>21</source>
 					<target>21</target>
-				</configuration>
+                    <compilerArgs>--enable-preview</compilerArgs>
+                </configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

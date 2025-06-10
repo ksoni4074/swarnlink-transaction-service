@@ -35,7 +35,7 @@ spring:
 cloud:
   aws:
     sqs:
-      queue-name: swarnlink-fcm-notification-queue
+      reminder-queue-name: swarnlink-reminder-notification-queue
       region: us-east-1
 
 
@@ -48,3 +48,16 @@ jwt:
 aws:
   sqs:
     notificationQueue: swarnlink-fcm-notification-queue
+
+
+reminder:
+  days-before-close: 3
+  batch : 30
+
+user:
+  service:
+    url: http://localhost:8080  # Replace with actual service hostname in prod
+
+internal:
+  auth:
+    token: super-secure-internal-token
