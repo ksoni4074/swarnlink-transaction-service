@@ -21,4 +21,19 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 """)
     List<Transaction> findUnsettledTransactionsDueBy(LocalDate date);
 
+    List<Transaction> findByUserIdAndIsSettled(Long userId, Boolean isSettled);
+
+    @Query("""
+      SELECT t FROM Transaction t
+      WHERE t.userId = :userId
+        AND t.isSettled = :settled
+        AND (
+              LOWER(t.party.name)        LIKE LOWER(CONCAT('%', :q, '%'))
+           OR t.party.mobileNumber       LIKE        CONCAT('%', :q, '%')
+        )
+    """)
+    List<Transaction> searchByParty(Long userId,
+                                    boolean settled,
+                                    String q);
+
 }

@@ -13,6 +13,7 @@ import com.swarnlink.queue.WhatsAppReminderPublisher;
 import com.swarnlink.repository.PartyRepository;
 import com.swarnlink.repository.TransactionLogRepository;
 import com.swarnlink.repository.TransactionRepository;
+import jakarta.annotation.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,23 @@ public class TransactionService {
         return partyRepository.findByUserId(userId).stream()
                 .map(x -> TransactionMapper.toPartyResponse(x))
                 .toList();
+    }
+
+    public TransactionResponse updateTransaction(UpdateTransactionRequest request, Long userId) {
+        Transaction tx = transactionRepository.findByIdAndUserId(request.transactionId(),userId)
+                .orElseThrow(() -> new BadRequestException("Transaction not found"));
+        tx.setTotalAmount(request.amount());
+        tx.setDescription(request.description());
+        tx.setTentativeCloseDate(request.tentativeCloseDate());
+        return TransactionMapper.toTransactionResponse(transactionRepository.save(tx));
+    }
+
+
+    public TransactionResponse settleTransaction(Long transactionId, Long userId) {
+        Transaction tx = transactionRepository.findByIdAndUserId(transactionId,userId)
+                .orElseThrow(() -> new BadRequestException("Transaction not found"));
+        tx.setSettled(true);
+        return TransactionMapper.toTransactionResponse(transactionRepository.save(tx));
     }
 
     public TransactionResponse createTransaction(CreateTransactionRequest request, Long userId) {
@@ -111,10 +129,9 @@ public class TransactionService {
     }
 
     public List<TransactionLogResponse> getLogsForTransaction(Long transactionId, Long userId) {
-        Transaction tx = transactionRepository.findById(transactionId)
-                .filter(t -> t.getUserId().equals(userId))
+        Transaction tx = transactionRepository.findByIdAndUserId(transactionId,userId)
                 .orElseThrow(() -> new BadRequestException("Transaction not found"));
-        return logRepository.findByTransactionId(transactionId).stream()
+        return logRepository.findByTransactionId(tx.getId()).stream()
                 .map(x -> TransactionMapper.toLogResponse(x))
                 .toList();
     }
@@ -202,5 +219,18 @@ public class TransactionService {
         }
 
         return batches;
+    }
+
+    public List<TransactionResponse> listTransactions(Long userId,
+                                                      boolean settled,
+                                                      @Nullable String search) {
+
+        List<Transaction> txList = (search == null || search.isBlank())
+                ? transactionRepository.findByUserIdAndIsSettled(userId, settled)
+                : transactionRepository.searchByParty(userId, settled, search.trim());
+
+        return txList.stream()
+                .map(TransactionMapper::toTransactionResponse)
+                .toList();
     }
 }
